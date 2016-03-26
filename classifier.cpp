@@ -2,12 +2,6 @@
 #include <random>
 #include <vector>
 #include "common.hpp"
-#include <jubatus/core/common/big_endian.hpp>
-#include <jubatus/core/framework/packer.hpp>
-#include <jubatus/core/framework/stream_writer.hpp>
-
-typedef std::chrono::duration<double, std::ratio<1, 1000> > Milli;
-using jubatus::core::fv_converter::datum;
 
 int main(int argc, char **argv) {
   auto opt = parse_args("classifier", argc, argv);

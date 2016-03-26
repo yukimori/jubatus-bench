@@ -9,6 +9,7 @@
 #include <jubatus/core/fv_converter/datum_to_fv_converter.hpp>
 #include <jubatus/core/storage/storage_factory.hpp>
 #include <jubatus/core/classifier/classifier_factory.hpp>
+#include <jubatus/core/recommender/recommender_factory.hpp>
 
 using jubatus::core::fv_converter::datum;
 
@@ -19,6 +20,8 @@ Args parse_args(const std::string& api, int argc, char **argv)
   flag_ops.insert(std::make_pair("--classify", &out.classify));
   flag_ops.insert(std::make_pair("--train", &out.train));
   flag_ops.insert(std::make_pair("--validate", &out.validate));
+  flag_ops.insert(std::make_pair("--similar-row", &out.similar_row));
+  flag_ops.insert(std::make_pair("--decode-row", &out.decode_row));
   flag_ops.insert(std::make_pair("--cv", &out.cv));
   flag_ops.insert(std::make_pair("--shuffle", &out.shuffle));
 
@@ -50,12 +53,22 @@ Args parse_args(const std::string& api, int argc, char **argv)
       out.count = std::atoi(val.c_str());
       continue;
     }
+    if (flg == "-s" || flg == "--size") {
+      out.size = std::atoi(val.c_str());
+      continue;
+    }
   }
 
   if (api == "classifier") {
     if (!(out.train || out.validate || out.classify || out.cv)) {
       out.train = true;
       out.classify = true;
+    }
+  } else if (api == "recommender") {
+    if (!(out.train || out.similar_row || out.decode_row)) {
+      out.train = true;
+      out.similar_row = true;
+      out.decode_row = true;
     }
   }
   return std::move(out);
@@ -155,4 +168,17 @@ std::shared_ptr<jubatus::core::driver::classifier> create_classifier(const std::
             jubatus::core::common::jsonconfig::config(cfg["parameter"]),
             jubatus::core::storage::storage_factory::create_storage("local")),
         fvconv);
+}
+
+std::shared_ptr<jubatus::core::driver::recommender> create_recommender(const std::string& config) {
+  std::string my_id;
+  auto cfg = jubatus::util::lang::lexical_cast<jubatus::util::text::json::json>(config);
+  jubatus::core::fv_converter::converter_config fvconv_config;
+  jubatus::util::text::json::from_json(cfg["converter"], fvconv_config);
+  return std::make_shared<jubatus::core::driver::recommender>(
+    jubatus::core::recommender::recommender_factory::create_recommender(
+      static_cast<jubatus::util::text::json::json_string*>(cfg["method"].get())->get(),
+      jubatus::core::common::jsonconfig::config(cfg["parameter"]),
+      my_id),
+    jubatus::core::fv_converter::make_fv_converter(fvconv_config, NULL));
 }

@@ -2,9 +2,11 @@ JUBACXXFLAGS=-L../jubatus_core/lib -I../jubatus_core/build -I../jubatus_core -lj
 CXX=g++
 CXXFLAGS=-O2 -std=c++11 -Wno-deprecated-declarations $(JUBACXXFLAGS)
 
-all: classifier
-clean:
-	rm -f classifier
+TARGETS=classifier recommender
 
-classifier: classifier.cpp common.cpp common.hpp
+all: $(TARGETS)
+clean:
+	rm -f $(TARGETS)
+
+%: %.cpp common.cpp common.hpp
 	$(CXX) $(CXXFLAGS) -o $@ $^
