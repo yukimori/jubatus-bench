@@ -1,6 +1,8 @@
+#include <algorithm>
 #include <fstream>
 #include <vector>
 #include "common.hpp"
+#include "jubatus/util/math/random.h"
 
 using jubatus::core::fv_converter::datum;
 
@@ -13,12 +15,10 @@ int main(int argc, char **argv) {
     std::cout << path << std::endl;
     data_t data = load_csv(path);
 
-#if 0
     if (opt.shuffle) {
-      std::mt19937 rng(0);
-      std::shuffle(data.begin(), data.end(), rng);
+      jubatus::util::math::random::mtrand rng(0);
+      std::random_shuffle(data.begin(), data.end(), rng);
     }
-#endif
 
     shared_ptr<jubatus::core::driver::recommender> handle = create_recommender(opt.config.serialize());
     if (opt.train) {

@@ -1,7 +1,8 @@
+#include <algorithm>
 #include <fstream>
 #include <vector>
 #include "common.hpp"
-#include <mcheck.h>
+#include "jubatus/util/math/random.h"
 
 int main(int argc, char **argv) {
   Args opt = parse_args("classifier", argc, argv);
@@ -12,12 +13,10 @@ int main(int argc, char **argv) {
 
     data_t data = load_csv(path);
 
-#if 0
     if (opt.shuffle) {
-      std::mt19937 rng(0);
-      std::shuffle(data.begin(), data.end(), rng);
+      jubatus::util::math::random::mtrand rng(0);
+      std::random_shuffle(data.begin(), data.end(), rng);
     }
-#endif
 
     if (opt.cv) {
       shared_ptr<jubatus::core::driver::classifier> handle = create_classifier(opt.config.serialize());
@@ -86,7 +85,6 @@ int main(int argc, char **argv) {
         msgpack::unpack(&unpacked, data.data(), data.size());
         handle->unpack(unpacked.get());
         std::cout << "model loaded" << std::endl;
-        mcheck_check_all();
     }
 
     if (opt.validate) {
