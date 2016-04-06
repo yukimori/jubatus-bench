@@ -1,8 +1,11 @@
 #include <algorithm>
 #include <fstream>
+#include <map>
 #include <vector>
 #include "common.hpp"
-#include "jubatus/util/math/random.h"
+#include <jubatus/util/math/random.h>
+
+typedef std::map<std::string, std::vector<int> > counter_t;
 
 int main(int argc, char **argv) {
   Args opt = parse_args("classifier", argc, argv);
@@ -28,6 +31,13 @@ int main(int argc, char **argv) {
       }
       train_time = now_millisec() - train_time;
       int ok = 0, ng = 0;
+      counter_t cnt; // vector=[tp, fp, fn]
+      for (size_t i = train_size; i < data.size(); ++i) {
+        if (cnt.find(data[i].first) != cnt.end())
+          continue;
+        cnt.insert(std::pair<std::string, std::vector<int> >(
+            data[i].first, std::vector<int>(4)));
+      }
       double validate_time = now_millisec();
       for (size_t i = train_size; i < data.size(); ++i) {
         std::pair<std::string, datum>& item = data[i];
@@ -37,10 +47,15 @@ int main(int argc, char **argv) {
           if (top.score < ret[j].score)
             top = ret[j];
         }
+        std::vector<int>& expected = cnt[item.first];
+        std::vector<int>& actual = cnt[top.label];
         if (top.label == item.first) {
           ++ok;
+          ++actual[0];   // tp
         } else {
           ++ng;
+          ++actual[1];   // fp
+          ++expected[2]; // fn
         }
       }
       validate_time = now_millisec() - validate_time;
@@ -52,6 +67,26 @@ int main(int argc, char **argv) {
                 << "          " << (validate_time / (data.size() - train_size)) << " ms (avg latency)" << std::endl
                 << "          " << ((data.size() - train_size) / (validate_time / 1000)) << " ops" << std::endl
                 << "validate: ok=" << ok << ", ng=" << ng << std::endl;
+      double macro_F = 0.0, macro_precision = 0.0, macro_recall = 0;
+      uint64_t micro_tp = 0, micro_fp = 0, micro_fn = 0;
+      for (counter_t::iterator it = cnt.begin(); it != cnt.end(); ++it) {
+        int tp = it->second[0], fp = it->second[1], fn = it->second[2];
+        int tn = data.size() - train_size - tp - fp - fn;
+        float precision = tp / static_cast<float>(tp + fp);
+        float recall = tp / static_cast<float>(tp + fn);
+        float F = tp / (static_cast<float>(tp + tp + fp + fn) * 0.5f);
+        macro_F += F; macro_precision += precision; macro_recall += recall;
+        micro_tp += tp; micro_fp += fp; micro_fn += fn;
+        std::cout << "  label=" << it->first << ": "
+                  << "F=" << F << ", precision=" << precision << ", recall=" << recall
+                  << ", tp=" << tp << ", fp=" << fp << ", fn=" << fn << ", tn=" << tn << std::endl;
+      }
+      float micro_precision = micro_tp / static_cast<float>(micro_tp + micro_fp);
+      float micro_recall = micro_tp / static_cast<float>(micro_tp + micro_fn);
+      float micro_F = micro_tp / (static_cast<float>(micro_tp * 2 + micro_fp + micro_fn) * 0.5f);
+      macro_F /= cnt.size(); macro_precision /= cnt.size(); macro_recall /= cnt.size();
+      std::cout << "  [macro]: " << "F=" << macro_F << ", precision=" << macro_precision << ", recall=" << macro_recall << std::endl;
+      std::cout << "  [micro]: " << "F=" << micro_F << ", precision=" << micro_precision << ", recall=" << micro_recall << std::endl;
     }
 
     shared_ptr<jubatus::core::driver::classifier> handle = create_classifier(opt.config.serialize());
