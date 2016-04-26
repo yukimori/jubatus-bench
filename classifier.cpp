@@ -6,9 +6,30 @@
 #include <jubatus/util/math/random.h>
 
 typedef std::map<std::string, std::vector<int> > counter_t;
+std::string data_savefile = "data.csv";
+
+std::string get_param(picojson::value& config) {
+    picojson::object o = config.get<picojson::object>();
+    picojson::object& classify_param = o["parameter"].get<picojson::object>();
+    std::string method = classify_param["method"].get<std::string>();
+    picojson::object& nn_param = classify_param["parameter"].get<picojson::object>();
+    int hash_num = (int)nn_param["hash_num"].get<double>();
+    int threads = 1;
+    if(!nn_param["threads"].is<picojson::null>()) {
+      threads = (int)nn_param["threads"].get<double>();
+    }
+    
+    std::stringstream ss;
+    ss << method << "," << hash_num << "," << threads;
+    return ss.str();
+}
 
 int main(int argc, char **argv) {
   Args opt = parse_args("classifier", argc, argv);
+  std::string param = get_param(opt.config);
+  std::ofstream ofs(data_savefile.c_str(), std::ios::app);
+  //  ofs << "method,hashnum,threads,datasize[records],elapsedtime,avg latency[ms],ops" << std::endl;
+
   for (std::vector<std::string>::iterator it = opt.files.begin(); it != opt.files.end(); ++it) {
     const std::string& path = *it;
     const std::string model_path(path + ".model");
@@ -91,6 +112,7 @@ int main(int argc, char **argv) {
 
     shared_ptr<jubatus::core::driver::classifier> handle = create_classifier(opt.config.serialize());
 
+
     if (opt.train) {
       double time = now_millisec();
       for (data_t::iterator it = data.begin(); it != data.end(); ++it) {
@@ -100,6 +122,8 @@ int main(int argc, char **argv) {
       std::cout << "   train: " << time << " ms (" << data.size() << " records)" << std::endl
                 << "          " << (time / data.size()) << " ms (avg latency)" << std::endl
                 << "          " << (data.size() / (time / 1000)) << " ops" << std::endl;
+
+      ofs << "train," << param << "," << data.size() << "," << time << "," << (time / data.size()) << "," << (data.size() / (time / 1000)) << std::endl;
       if (!opt.validate && !opt.classify) {
         msgpack::sbuffer user_data_buf;
         jubatus::core::framework::stream_writer<msgpack::sbuffer> st(user_data_buf);
@@ -153,6 +177,7 @@ int main(int argc, char **argv) {
       std::cout << "classify: " << time << " ms (" << n << " records)" << std::endl
                 << "          " << (time / n) << " ms (avg latency)" << std::endl
                 << "          " << (n / (time / 1000)) << " ops" << std::endl;
+      ofs << "classify," << param << "," << data.size() << "," << time << "," << (time / data.size()) << "," << (data.size() / (time / 1000)) << std::endl;
     }
 
     std::cout << std::endl;

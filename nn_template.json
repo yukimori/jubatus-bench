@@ -1,0 +1,26 @@
+{
+  "converter": {
+    "num_filter_types": {},
+    "num_filter_rules": [],
+    "string_filter_types": {},
+    "string_filter_rules": [],
+    "num_types": {},
+    "num_rules": [
+      { "key": "*", "type": "num" }
+    ],
+    "string_types": {},
+    "string_rules": [
+      { "key": "*", "type": "space", "sample_weight": "bin", "global_weight": "bin" }
+    ]
+  },
+  "method": "NN",
+  "parameter": {
+    "method": "lsh",
+    "parameter": {
+      "hash_num": 64,
+      "threads": 1
+    },
+    "nearest_neighbor_num": 8,
+    "local_sensitivity": 1
+  }
+}

@@ -5,6 +5,7 @@
 #include <sstream>
 #include <vector>
 #include <utility>
+#include <fstream>
 
 #include <jubatus/core/fv_converter/datum.hpp>
 #include <jubatus/core/driver/classifier.hpp>
@@ -62,5 +63,7 @@ std::string to_string(const T& v) {
   os << v;
   return os.str();
 }
+
+
 
 #endif
