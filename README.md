@@ -1,3 +1,7 @@
+# NN高速化のベンチマーク実行
+jubatus-benchをコンパイルし、benchmark.shを実行する。
+測定結果はdata.csvに出力される
+
 # jubatus-bench
 
 [jubatus-core](https://github.com/jubatus/jubatus_core)のベンチマークプログラム．
