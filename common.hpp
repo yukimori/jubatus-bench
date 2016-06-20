@@ -9,6 +9,7 @@
 #include <jubatus/core/fv_converter/datum.hpp>
 #include <jubatus/core/driver/classifier.hpp>
 #include <jubatus/core/driver/recommender.hpp>
+#include <jubatus/core/driver/nearest_neighbor.hpp>
 #include <jubatus/core/common/big_endian.hpp>
 #include <jubatus/core/framework/packer.hpp>
 #include <jubatus/core/framework/stream_writer.hpp>
@@ -54,6 +55,7 @@ inline double now_millisec() {
 double get_memory_usage();
 
 shared_ptr<jubatus::core::driver::classifier> create_classifier(const std::string& config);
+shared_ptr<jubatus::core::driver::nearest_neighbor> create_nearest_neighbor(const std::string& config);
 shared_ptr<jubatus::core::driver::recommender> create_recommender(const std::string& config);
 
 template<typename T>

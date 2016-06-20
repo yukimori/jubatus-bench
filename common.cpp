@@ -8,8 +8,10 @@
 #include <jubatus/core/common/jsonconfig.hpp>
 #include <jubatus/core/fv_converter/converter_config.hpp>
 #include <jubatus/core/fv_converter/datum_to_fv_converter.hpp>
+#include <jubatus/core/storage/column_table.hpp>
 #include <jubatus/core/storage/storage_factory.hpp>
 #include <jubatus/core/classifier/classifier_factory.hpp>
+#include <jubatus/core/nearest_neighbor/nearest_neighbor_factory.hpp>
 #include <jubatus/core/recommender/recommender_factory.hpp>
 
 using jubatus::core::fv_converter::datum;
@@ -184,6 +186,20 @@ shared_ptr<jubatus::core::driver::recommender> create_recommender(const std::str
       static_cast<jubatus::util::text::json::json_string*>(cfg["method"].get())->get(),
       jubatus::core::common::jsonconfig::config(cfg["parameter"]),
       my_id),
+    jubatus::core::fv_converter::make_fv_converter(fvconv_config, NULL)));
+}
+
+shared_ptr<jubatus::core::driver::nearest_neighbor> create_nearest_neighbor(const std::string& config) {
+  std::string my_id;
+  shared_ptr<jubatus::core::storage::column_table> table(new jubatus::core::storage::column_table);
+  jubatus::util::text::json::json cfg = jubatus::util::lang::lexical_cast<jubatus::util::text::json::json>(config);
+  jubatus::core::fv_converter::converter_config fvconv_config;
+  jubatus::util::text::json::from_json(cfg["converter"], fvconv_config);
+  return shared_ptr<jubatus::core::driver::nearest_neighbor>(new jubatus::core::driver::nearest_neighbor(
+    jubatus::core::nearest_neighbor::create_nearest_neighbor(
+      static_cast<jubatus::util::text::json::json_string*>(cfg["method"].get())->get(),
+      jubatus::core::common::jsonconfig::config(cfg["parameter"]),
+      table, my_id),
     jubatus::core::fv_converter::make_fv_converter(fvconv_config, NULL)));
 }
 

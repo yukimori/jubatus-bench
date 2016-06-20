@@ -4,3 +4,4 @@
 *.sh
 /classifier
 /recommender
+/nearest_neighbor
