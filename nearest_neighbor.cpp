@@ -10,10 +10,15 @@ using jubatus::core::fv_converter::datum;
 int main(int argc, char **argv) {
   Args opt = parse_args("nn", argc, argv);
 
+  const int hashnum = static_cast<int>(opt.config.get("parameter").get("hash_num").get<double>());
   const int num_of_features = 100;
-  const int num_of_rows = 20000000;
-  const int num_of_tests = 1000;
-  const std::string model_path("nn.model");
+  const int num_of_rows = opt.size;
+  const int num_of_tests = opt.count;
+  const std::string model_path("nn-" +
+                               jubatus::util::lang::lexical_cast<std::string>(hashnum) +
+                               "-" +
+                               jubatus::util::lang::lexical_cast<std::string>(num_of_rows) +
+                               ".model");
 
   jubatus::util::math::random::sfmt607rand rng(0);
   shared_ptr<jubatus::core::driver::nearest_neighbor> handle = create_nearest_neighbor(opt.config.serialize());
